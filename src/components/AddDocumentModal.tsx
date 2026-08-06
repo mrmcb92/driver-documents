@@ -147,6 +147,8 @@ export default function AddDocumentModal({
 
   const inputBaseClass =
     'w-full rounded-xl border-2 bg-white px-3 py-2.5 text-zinc-900 outline-none transition-colors focus:ring-2 focus:ring-zinc-400 sm:px-4 sm:py-3 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:ring-zinc-600';
+  const dateInputClass =
+    'w-full max-w-full box-border';
   const inputErrorClass =
     'border-black focus:border-black dark:border-white dark:focus:border-white';
   const inputNormalClass =
@@ -154,14 +156,14 @@ export default function AddDocumentModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 animate-fade-in sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-fade-in"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
       <div
-        className="flex w-full max-w-lg flex-col rounded-t-2xl border-2 border-black bg-white p-4 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] animate-slide-up dark:border-white dark:bg-zinc-900 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] sm:max-h-[calc(100vh-32px)] sm:rounded-2xl sm:p-5 max-h-[90vh]"
+        className="flex w-[90%] max-w-[340px] flex-col overflow-hidden rounded-2xl border-2 border-black bg-white p-4 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] animate-slide-up dark:border-white dark:bg-zinc-900 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex shrink-0 items-center justify-between sm:mb-4">
@@ -178,8 +180,8 @@ export default function AddDocumentModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1 sm:space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col">
+          <div className="space-y-3 sm:space-y-4">
             <div>
               <label htmlFor="type" className="mb-1 block text-xs font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
                 Tip document
@@ -230,7 +232,7 @@ export default function AddDocumentModal({
                   value={form.issueDate}
                   onChange={(e) => handleChange('issueDate', e.target.value)}
                   onBlur={() => handleBlur('issueDate')}
-                  className={`${inputBaseClass} ${errors.issueDate && touched.issueDate ? inputErrorClass : inputNormalClass}`}
+                  className={`${inputBaseClass} ${dateInputClass} ${errors.issueDate && touched.issueDate ? inputErrorClass : inputNormalClass}`}
                 />
                 {errors.issueDate && touched.issueDate && (
                   <p className="mt-1 text-sm font-bold text-zinc-900 dark:text-zinc-100">{errors.issueDate}</p>
@@ -247,7 +249,7 @@ export default function AddDocumentModal({
                   value={form.expiryDate}
                   onChange={(e) => handleChange('expiryDate', e.target.value)}
                   onBlur={() => handleBlur('expiryDate')}
-                  className={`${inputBaseClass} ${errors.expiryDate && touched.expiryDate ? inputErrorClass : inputNormalClass}`}
+                  className={`${inputBaseClass} ${dateInputClass} ${errors.expiryDate && touched.expiryDate ? inputErrorClass : inputNormalClass}`}
                 />
                 {errors.expiryDate && touched.expiryDate && (
                   <p className="mt-1 text-sm font-bold text-zinc-900 dark:text-zinc-100">{errors.expiryDate}</p>
