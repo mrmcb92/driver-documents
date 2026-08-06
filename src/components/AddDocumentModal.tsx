@@ -148,7 +148,7 @@ export default function AddDocumentModal({
   const inputBaseClass =
     'w-full rounded-xl border-2 bg-white px-3 py-2.5 text-zinc-900 outline-none transition-colors focus:ring-2 focus:ring-zinc-400 sm:px-4 sm:py-3 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:ring-zinc-600';
   const dateInputClass =
-    'w-full max-w-full box-border';
+    'w-full max-w-full min-w-0 box-border block appearance-none m-0 flex-1';
   const inputErrorClass =
     'border-black focus:border-black dark:border-white dark:focus:border-white';
   const inputNormalClass =
@@ -222,7 +222,7 @@ export default function AddDocumentModal({
             )}
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-              <div>
+              <div className="w-full max-w-full overflow-hidden flex flex-col">
                 <label htmlFor="issueDate" className="mb-1 block text-xs font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
                   Data emiterii/efectuării
                 </label>
@@ -239,7 +239,7 @@ export default function AddDocumentModal({
                 )}
               </div>
 
-              <div>
+              <div className="w-full max-w-full overflow-hidden flex flex-col">
                 <label htmlFor="expiryDate" className="mb-1 block text-xs font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
                   Data expirării
                 </label>

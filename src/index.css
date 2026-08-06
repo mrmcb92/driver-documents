@@ -27,6 +27,15 @@
   button {
     @apply focus:outline-none;
   }
+
+  /* iOS Safari fix: prevent date inputs from overflowing their container */
+  input[type="date"] {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
 }
 
 @layer utilities {
