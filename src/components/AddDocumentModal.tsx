@@ -146,7 +146,7 @@ export default function AddDocumentModal({
   const isCustom = form.type === 'custom';
 
   const inputBaseClass =
-    'w-full rounded-xl border-2 bg-white px-4 py-3 text-zinc-900 outline-none transition-colors focus:ring-2 focus:ring-zinc-400 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:ring-zinc-600';
+    'w-full rounded-xl border-2 bg-white px-3 py-2.5 text-zinc-900 outline-none transition-colors focus:ring-2 focus:ring-zinc-400 sm:px-4 sm:py-3 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:ring-zinc-600';
   const inputErrorClass =
     'border-black focus:border-black dark:border-white dark:focus:border-white';
   const inputNormalClass =
@@ -161,130 +161,132 @@ export default function AddDocumentModal({
       aria-labelledby="modal-title"
     >
       <div
-        className="w-full max-w-lg rounded-t-2xl border-2 border-black bg-white p-5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] sm:rounded-2xl animate-slide-up dark:border-white dark:bg-zinc-900 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]"
+        className="flex w-full max-w-lg flex-col rounded-t-2xl border-2 border-black bg-white p-4 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] animate-slide-up dark:border-white dark:bg-zinc-900 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] sm:max-h-[calc(100vh-32px)] sm:rounded-2xl sm:p-5 max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 id="modal-title" className="text-xl font-black text-zinc-900 dark:text-zinc-100">
+        <div className="mb-3 flex shrink-0 items-center justify-between sm:mb-4">
+          <h2 id="modal-title" className="text-lg font-black text-zinc-900 dark:text-zinc-100 sm:text-xl">
             {editingDocument ? 'Editează document' : 'Adaugă document'}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border-2 border-black bg-white p-2 text-zinc-900 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all duration-100 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none dark:border-white dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
+            className="rounded-full border-2 border-black bg-white p-1.5 text-zinc-900 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all duration-100 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none dark:border-white dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] sm:p-2"
             aria-label="Închide"
           >
             ✕
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="type" className="mb-1 block text-sm font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100">
-              Tip document
-            </label>
-            <select
-              id="type"
-              value={form.type}
-              onChange={(e) => handleChange('type', e.target.value)}
-              onBlur={() => handleBlur('type')}
-              className={`${inputBaseClass} ${inputNormalClass}`}
-            >
-              {Object.entries(DOCUMENT_TYPE_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {isCustom && (
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1 sm:space-y-4">
             <div>
-              <label htmlFor="title" className="mb-1 block text-sm font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100">
-                Nume document
+              <label htmlFor="type" className="mb-1 block text-xs font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
+                Tip document
               </label>
-              <input
-                id="title"
-                type="text"
-                value={form.title}
-                onChange={(e) => handleChange('title', e.target.value)}
-                onBlur={() => handleBlur('title')}
-                placeholder="Ex: Contract de muncă"
-                className={`${inputBaseClass} ${errors.title && touched.title ? inputErrorClass : inputNormalClass}`}
-              />
-              {errors.title && touched.title && (
-                <p className="mt-1 text-sm font-bold text-zinc-900 dark:text-zinc-100">{errors.title}</p>
-              )}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="issueDate" className="mb-1 block text-sm font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100">
-                Data emiterii/efectuării
-              </label>
-              <input
-                id="issueDate"
-                type="date"
-                value={form.issueDate}
-                onChange={(e) => handleChange('issueDate', e.target.value)}
-                onBlur={() => handleBlur('issueDate')}
-                className={`${inputBaseClass} ${errors.issueDate && touched.issueDate ? inputErrorClass : inputNormalClass}`}
-              />
-              {errors.issueDate && touched.issueDate && (
-                <p className="mt-1 text-sm font-bold text-zinc-900 dark:text-zinc-100">{errors.issueDate}</p>
-              )}
+              <select
+                id="type"
+                value={form.type}
+                onChange={(e) => handleChange('type', e.target.value)}
+                onBlur={() => handleBlur('type')}
+                className={`${inputBaseClass} ${inputNormalClass}`}
+              >
+                {Object.entries(DOCUMENT_TYPE_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
             </div>
 
+            {isCustom && (
+              <div>
+                <label htmlFor="title" className="mb-1 block text-xs font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
+                  Nume document
+                </label>
+                <input
+                  id="title"
+                  type="text"
+                  value={form.title}
+                  onChange={(e) => handleChange('title', e.target.value)}
+                  onBlur={() => handleBlur('title')}
+                  placeholder="Ex: Contract de muncă"
+                  className={`${inputBaseClass} ${errors.title && touched.title ? inputErrorClass : inputNormalClass}`}
+                />
+                {errors.title && touched.title && (
+                  <p className="mt-1 text-sm font-bold text-zinc-900 dark:text-zinc-100">{errors.title}</p>
+                )}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+              <div>
+                <label htmlFor="issueDate" className="mb-1 block text-xs font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
+                  Data emiterii/efectuării
+                </label>
+                <input
+                  id="issueDate"
+                  type="date"
+                  value={form.issueDate}
+                  onChange={(e) => handleChange('issueDate', e.target.value)}
+                  onBlur={() => handleBlur('issueDate')}
+                  className={`${inputBaseClass} ${errors.issueDate && touched.issueDate ? inputErrorClass : inputNormalClass}`}
+                />
+                {errors.issueDate && touched.issueDate && (
+                  <p className="mt-1 text-sm font-bold text-zinc-900 dark:text-zinc-100">{errors.issueDate}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="expiryDate" className="mb-1 block text-xs font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
+                  Data expirării
+                </label>
+                <input
+                  id="expiryDate"
+                  type="date"
+                  value={form.expiryDate}
+                  onChange={(e) => handleChange('expiryDate', e.target.value)}
+                  onBlur={() => handleBlur('expiryDate')}
+                  className={`${inputBaseClass} ${errors.expiryDate && touched.expiryDate ? inputErrorClass : inputNormalClass}`}
+                />
+                {errors.expiryDate && touched.expiryDate && (
+                  <p className="mt-1 text-sm font-bold text-zinc-900 dark:text-zinc-100">{errors.expiryDate}</p>
+                )}
+              </div>
+            </div>
+
+            {form.issueDate && form.expiryDate && !errors.expiryDate && !errors.issueDate && (
+              <p className="text-sm font-bold text-zinc-600 dark:text-zinc-400">
+                Valabilitate: {formatDateRo(form.issueDate)} → {formatDateRo(form.expiryDate)}
+              </p>
+            )}
+
             <div>
-              <label htmlFor="expiryDate" className="mb-1 block text-sm font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100">
-                Data expirării
+              <label htmlFor="notes" className="mb-1 block text-xs font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
+                Note (opțional)
               </label>
-              <input
-                id="expiryDate"
-                type="date"
-                value={form.expiryDate}
-                onChange={(e) => handleChange('expiryDate', e.target.value)}
-                onBlur={() => handleBlur('expiryDate')}
-                className={`${inputBaseClass} ${errors.expiryDate && touched.expiryDate ? inputErrorClass : inputNormalClass}`}
+              <textarea
+                id="notes"
+                value={form.notes}
+                onChange={(e) => handleChange('notes', e.target.value)}
+                rows={3}
+                placeholder="Observații, contacte, costuri..."
+                className={`${inputBaseClass} ${inputNormalClass}`}
               />
-              {errors.expiryDate && touched.expiryDate && (
-                <p className="mt-1 text-sm font-bold text-zinc-900 dark:text-zinc-100">{errors.expiryDate}</p>
-              )}
             </div>
           </div>
 
-          {form.issueDate && form.expiryDate && !errors.expiryDate && !errors.issueDate && (
-            <p className="text-sm font-bold text-zinc-600 dark:text-zinc-400">
-              Valabilitate: {formatDateRo(form.issueDate)} → {formatDateRo(form.expiryDate)}
-            </p>
-          )}
-
-          <div>
-            <label htmlFor="notes" className="mb-1 block text-sm font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100">
-              Note (opțional)
-            </label>
-            <textarea
-              id="notes"
-              value={form.notes}
-              onChange={(e) => handleChange('notes', e.target.value)}
-              rows={3}
-              placeholder="Observații, contacte, costuri..."
-              className={`${inputBaseClass} ${inputNormalClass}`}
-            />
-          </div>
-
-          <div className="flex gap-3 pt-2">
+          <div className="flex shrink-0 gap-3 pt-3 sm:pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-xl border-2 border-black bg-white px-4 py-3 font-black uppercase tracking-wide text-zinc-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none dark:border-white dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
+              className="flex-1 rounded-xl border-2 border-black bg-white px-3 py-2.5 font-black uppercase tracking-wide text-zinc-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none dark:border-white dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] sm:px-4 sm:py-3"
             >
               Anulează
             </button>
             <button
               type="submit"
-              className="flex-1 rounded-xl border-2 border-black bg-black px-4 py-3 font-black uppercase tracking-wide text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transition-all duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+              className="flex-1 rounded-xl border-2 border-black bg-black px-3 py-2.5 font-black uppercase tracking-wide text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transition-all duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] sm:px-4 sm:py-3"
             >
               {editingDocument ? 'Salvează' : 'Adaugă'}
             </button>
