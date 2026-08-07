@@ -11,6 +11,13 @@ const PULL_PAGE_LIMIT = 100;
 const SYNC_API_URL: string | undefined =
   (import.meta.env.VITE_SYNC_API_URL as string | undefined) || undefined;
 
+const SYNC_AUTH_TOKEN: string | undefined =
+  (import.meta.env.VITE_SYNC_AUTH_TOKEN as string | undefined) || undefined;
+
+function authHeaders(): Record<string, string> {
+  return SYNC_AUTH_TOKEN ? { Authorization: `Bearer ${SYNC_AUTH_TOKEN}` } : {};
+}
+
 function buildUrl(path: string): string {
   if (!SYNC_API_URL) {
     throw new Error(
@@ -61,7 +68,7 @@ async function push(items: SyncPushItem[]): Promise<SyncPushResponse> {
   for (const batch of batches) {
     const response = await fetch(buildUrl('/sync/push'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ items: batch }),
     });
     const result = await parseResponse<SyncPushResponse>(response);
@@ -75,7 +82,7 @@ async function push(items: SyncPushItem[]): Promise<SyncPushResponse> {
 
 async function pull(since: number, limit: number = PULL_PAGE_LIMIT): Promise<SyncPullResponse> {
   const response = await fetch(buildUrl(`/sync?since=${since}&limit=${limit}`), {
-    headers: { Accept: 'application/json' },
+    headers: { Accept: 'application/json', ...authHeaders() },
   });
   return parseResponse<SyncPullResponse>(response);
 }

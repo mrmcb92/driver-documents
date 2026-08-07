@@ -79,12 +79,56 @@ salvare → debounce 3 s → push; reconectare/intrare în pagină → pull delt
 - **Egalitate de timp (tie):** serverul câștigă și returnează starea rezolvată conflictului; clientul o adoptă.
 - **Ștergere vs editare:** tombstones — ștergerea mai nouă câștigă; „ghost edit” pe un document șters nu-l readuce.
 
-### Deploy producție
+### Deploy cu Supabase (recomandat pentru producție)
 
-Serverul de sincronizare împarte datele printr-un fișier JSON local — suficient pentru test.
-Pentru producție, înlocuiește `server/index.js` cu un backend persistat (Postgres/Supabase etc.)
-care implementează aceleași două rute (`POST /sync/push`, `GET /sync`), de preferință cu
-autentificare per utilizator.
+Backend-ul de producție este inclus în repo: un **Edge Function** (`supabase/functions/sync/`)
+care implementează exact aceleași rute ca serverul local (`POST /sync/push`, `GET /sync`),
+persistate în **Postgres** (tabelele `documents` și `tombstones`).
+
+Toată configurarea se face **din Dashboard-ul Supabase, fără CLI și fără parola bazei de
+date**. `<project-ref>` îl găsești în Dashboard → Project Settings → General → Reference ID
+(pentru acest proiect: `vfqduelvlmotnbscnbyx`).
+
+**Pași manuali — se fac o singură dată, totul din browser:**
+
+1. **Creează proiectul** pe [supabase.com](https://supabase.com) (plan gratuit e suficient).
+2. **Creează tabelele** (`documents` și `tombstones`):
+   - Deschide Dashboard → **SQL Editor** → **New query**
+   - Inserează conținutul fișierului `supabase/migrations/00001_create_sync_tables.sql`
+   - Apasă **Run**
+3. **Setează secret-ul** `SYNC_API_KEY` (cheie lungă și aleatorie, ex. generată cu
+   `openssl rand -hex 32`):
+   - Dashboard → **Edge Functions** → **Secrets Management** (sau direct
+     [supabase.com/dashboard/project/_/functions/secrets](https://supabase.com/dashboard/project/_/functions/secrets))
+   - Adaugă `SYNC_API_KEY` = cheia ta și apasă **Save**
+4. **Deploy Edge Function-ul `sync`**:
+   - Dashboard → **Edge Functions** → **Deploy a new function** → **Via Editor**
+   - Dă-i numele `sync` (minuscul, exact așa)
+   - În editor, șterge codul template și inserează conținutul fișierului
+     `supabase/functions/sync/index.ts`
+   - Apasă **Deploy function**
+5. **Dezactivează verificarea JWT** pentru funcție (obligatoriu, altfel platforma respinge
+   cererile clientului înainte de a ajunge la codul nostru):
+   - Din lista de Edge Functions, deschide funcția `sync`
+   - La **Details / Settings**, dezactivează **„Verify JWT with legacy secret”**(sau
+     „Enforce JWT Verification”) și salvează
+   - Notă: acest toggle are un bug cunoscut care îl poate reactiva la un redeploy —
+     dacă sincronizarea nu mai funcționează după un redeploy, verifică toggle-ul din nou
+6. **În `.env`** din proiect, setează:
+   ```
+   VITE_SYNC_API_URL=https://<project-ref>.supabase.co/functions/v1/sync
+   VITE_SYNC_AUTH_TOKEN=<aceeași-cheie-ca-la-pasul-3>
+   ```
+   și repornește `npm run dev`.
+
+> **Notă:** dacă nu vrei protecție prin cheie, nu seta `SYNC_API_KEY` — dar atunci
+> oricine poate citi/modifica datele sincronizate. Nu e recomandat în afara testelor locale.
+
+### Server local de referință
+
+`server/index.js` rămâne disponibil pentru test local (fără cont Supabase):
+stochează datele într-un fișier JSON local (`server/data.json`, ignorat de Git).
+Folosește-l cu `.env` în care `VITE_SYNC_API_URL` pointează spre `http://localhost:3001`.
 
 ---
 
@@ -189,6 +233,9 @@ driver-documents/
 ├── .gitignore
 ├── index.html
 ├── package.json
+├── supabase/
+│   ├── migrations/         # SQL (tabele documents + tombstones)
+│   └── functions/sync/     # Edge Function de sincronizare
 ├── tailwind.config.js
 ├── tsconfig.json
 ├── vercel.json             # Configurare deploy Vercel + rute SPA

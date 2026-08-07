@@ -27,6 +27,11 @@ dist-ssr
 # Sync server data
 server/data.json
 
+# Supabase CLI temp files
+supabase/.temp
+supabase/.branches
+.env.production
+
 # OS
 .DS_Store
 Thumbs.db
