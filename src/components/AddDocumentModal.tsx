@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Document, DocumentFormData, FormErrors } from '../types/document';
 import {
   DOCUMENT_TYPE_LABELS,
@@ -32,6 +32,52 @@ export default function AddDocumentModal({
   const [form, setForm] = useState<DocumentFormData>(EMPTY_FORM);
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Lock body scroll while the modal is open and restore focus on close
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    closeButtonRef.current?.focus();
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
+  // Close on Escape and trap focus inside the dialog
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable || focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     if (isOpen) {
@@ -51,8 +97,11 @@ export default function AddDocumentModal({
     }
   }, [isOpen, editingDocument]);
 
-  // Auto-calculate expiry date when type or issue date changes
+  // Auto-calculate expiry date when type or issue date changes.
+  // Only applies while adding a new document: editing must never
+  // overwrite a user-entered expiry date (documents can have custom validity).
   useEffect(() => {
+    if (editingDocument) return;
     if (!form.issueDate) return;
 
     const validityMonths = getValidityMonths(form.type);
@@ -60,7 +109,7 @@ export default function AddDocumentModal({
       const newExpiry = calculateExpiryDate(form.issueDate, validityMonths);
       setForm((prev) => (prev.expiryDate !== newExpiry ? { ...prev, expiryDate: newExpiry } : prev));
     }
-  }, [form.type, form.issueDate]);
+  }, [form.type, form.issueDate, editingDocument]);
 
   function validate(currentForm: DocumentFormData): FormErrors {
     const newErrors: FormErrors = {};
@@ -161,6 +210,7 @@ export default function AddDocumentModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
+      ref={dialogRef}
     >
       <div
         className="flex w-[90%] max-w-[340px] flex-col overflow-hidden rounded-2xl border-2 border-black bg-white p-4 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] animate-slide-up dark:border-white dark:bg-zinc-900 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] max-h-[85vh] overflow-y-auto"
@@ -171,6 +221,7 @@ export default function AddDocumentModal({
             {editingDocument ? 'Editează document' : 'Adaugă document'}
           </h2>
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
             className="rounded-full border-2 border-black bg-white p-1.5 text-zinc-900 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all duration-100 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none dark:border-white dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] sm:p-2"

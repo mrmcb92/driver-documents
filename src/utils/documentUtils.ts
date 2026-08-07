@@ -34,12 +34,14 @@ export function getValidityMonths(type: DocumentType): number | null {
 }
 
 export function calculateExpiryDate(issueDate: string, months: number): string {
-  const date = new Date(issueDate + 'T00:00:00');
-  date.setMonth(date.getMonth() + months);
+  const [year, month, day] = issueDate.split('-').map(Number);
+  // Work entirely in UTC to avoid timezone drift: in EU/Bucharest, parsing a
+  // local midnight and converting via toISOString() shifts the date back a day.
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCMonth(date.getUTCMonth() + months);
   // Adjust for edge cases (e.g., Jan 31 + 1 month becomes Mar 3 without this)
-  const originalDay = new Date(issueDate + 'T00:00:00').getDate();
-  if (date.getDate() !== originalDay) {
-    date.setDate(0); // last day of previous month
+  if (date.getUTCDate() !== day) {
+    date.setUTCDate(0); // last day of previous month
   }
   return date.toISOString().split('T')[0];
 }
@@ -127,13 +129,14 @@ export function getDocumentsExpiringThisMonthCount(documents: Document[]): numbe
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
+  const todayStart = new Date(currentYear, currentMonth, now.getDate()).getTime();
 
   return documents.filter((doc) => {
     const expiry = new Date(doc.expiryDate + 'T00:00:00');
     return (
       expiry.getFullYear() === currentYear &&
       expiry.getMonth() === currentMonth &&
-      expiry.getTime() >= new Date(now.setHours(0, 0, 0, 0)).getTime()
+      expiry.getTime() >= todayStart
     );
   }).length;
 }

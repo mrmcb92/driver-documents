@@ -16,10 +16,26 @@ import {
 
 const STORAGE_KEY = 'driver-documents';
 
+function isDocument(value: unknown): value is Document {
+  if (!value || typeof value !== 'object') return false;
+  const doc = value as Record<string, unknown>;
+  return (
+    typeof doc.id === 'string' &&
+    typeof doc.type === 'string' &&
+    typeof doc.title === 'string' &&
+    typeof doc.issueDate === 'string' &&
+    typeof doc.expiryDate === 'string' &&
+    typeof doc.createdAt === 'number' &&
+    typeof doc.updatedAt === 'number'
+  );
+}
+
 function loadDocuments(): Document[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Document[]) : [];
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter(isDocument) : [];
   } catch {
     return [];
   }
@@ -63,7 +79,7 @@ export default function App() {
   useEffect(() => {
     if (!isClient) return;
     saveDocuments(documents);
-    checkAndSendNotifications(documents);
+    void checkAndSendNotifications(documents);
   }, [documents, isClient]);
 
   const sortedDocuments = useMemo(
@@ -109,7 +125,7 @@ export default function App() {
       const result = await requestNotificationPermission();
       setPermission(result);
       if (result === 'granted') {
-        checkAndSendNotifications(documents);
+        await checkAndSendNotifications(documents);
       }
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Eroare la activarea notificărilor.');

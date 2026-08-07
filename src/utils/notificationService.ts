@@ -68,41 +68,30 @@ function buildNotificationBody(document: Document, daysRemaining: number): strin
   return `"${document.title}" expiră în ${daysRemaining} zile.`;
 }
 
-export function sendNativeNotification(document: Document, daysRemaining: number): void {
+export async function sendNativeNotification(document: Document, daysRemaining: number): Promise<void> {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
 
   const title = daysRemaining < 0 ? 'Document Expirat' : 'Document care expiră curând';
   const body = buildNotificationBody(document, daysRemaining);
+  const options: NotificationOptions = {
+    body,
+    icon: '/icon-192x192.png',
+    badge: '/icon-192x192.png',
+    tag: document.id,
+  };
 
-  try {
-    // Try service worker notification first (works when app is in background on supported devices)
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({
-        type: 'SHOW_NOTIFICATION',
-        title,
-        body,
-        data: { documentId: document.id },
-      });
-    } else {
-      new Notification(title, {
-        body,
-        icon: '/icon-192x192.png',
-        badge: '/icon-192x192.png',
-        tag: document.id,
-      });
-    }
-  } catch {
-    // Fallback to direct Notification API
-    new Notification(title, {
-      body,
-      icon: '/icon-192x192.png',
-      badge: '/icon-192x192.png',
-      tag: document.id,
-    });
+  // Prefer the service worker registration: it can show notifications even if
+  // the page is in the background on Android Chrome. Fall back to the direct
+  // constructor when no registration is active yet.
+  const registration = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : undefined;
+  if (registration) {
+    await registration.showNotification(title, options);
+  } else {
+    new Notification(title, options);
   }
 }
 
-export function checkAndSendNotifications(documents: Document[]): Document[] {
+export async function checkAndSendNotifications(documents: Document[]): Promise<Document[]> {
   if (!('Notification' in window) || Notification.permission !== 'granted') {
     return [];
   }
@@ -116,7 +105,7 @@ export function checkAndSendNotifications(documents: Document[]): Document[] {
 
     // Notify if expired or expiring within 30 days
     if (daysRemaining <= 30 && shouldNotifyToday(cache, doc.id)) {
-      sendNativeNotification(doc, daysRemaining);
+      void sendNativeNotification(doc, daysRemaining);
       cache[doc.id] = today;
       notifiedDocuments.push(doc);
     }
