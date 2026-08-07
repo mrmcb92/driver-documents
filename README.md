@@ -81,18 +81,49 @@ salvare → debounce 3 s → push; reconectare/intrare în pagină → pull delt
 
 ### Server de sincronizare
 
-Backend-ul de sincronizare este `server/index.js`. Acesta expune aceleași rute ca înainte
-(`POST /sync/push`, `GET /sync`) și persistă datele direct în **PostgreSQL**, folosind
-driverul `pg` și connection string-ul din `DATABASE_URL`.
+Backend-ul de sincronizare expune rutele `POST /sync/push` și `GET /sync` și persistă
+datele direct în **PostgreSQL** folosind driverul `pg` și `DATABASE_URL`.
 
-Tabelele necesare (`documents` și `tombstones`) sunt create automat la pornirea serverului
+Tabelele necesare (`documents` și `tombstones`) sunt create automat la prima conectare
 dacă nu există deja.
 
-**Pornire locală:**
+Există două moduri de rulare:
 
-1. Asigură-te că ai copiat `.env.example` în `.env` și că `DATABASE_URL` este setat.
-2. Rulează `npm run sync-server`.
-3. În alt terminal, rulează `npm run dev`.
+**1. Local (pentru dezvoltare):**
+
+```bash
+npm run sync-server
+```
+
+În alt terminal:
+
+```bash
+npm run dev
+```
+
+Setează în `.env`:
+
+```bash
+VITE_SYNC_API_URL=http://localhost:3001
+DATABASE_URL=...
+```
+
+**2. Online pe Vercel (pentru producție):**
+
+API-ul de sincronizare este implementat ca **serverless functions** în directorul `api/`.
+Când faci deploy pe Vercel, aceleași rute (`/sync`, `/sync/push`, `/health`) sunt disponibile
+pe domeniul aplicației, deci frontend-ul poate apela backend-ul direct.
+
+Setează în Vercel → Project Settings → Environment Variables:
+
+| Variabilă | Valoare |
+|---|---|
+| `DATABASE_URL` | connection string PostgreSQL |
+| `AUTH_TOKEN` | cheie secretă pentru protecția API (opțional, dar recomandat) |
+| `VITE_SYNC_API_URL` | `/` (apeluri pe același domeniu) |
+| `VITE_SYNC_AUTH_TOKEN` | aceeași valoare ca `AUTH_TOKEN` |
+
+După setarea variabilelor, redeploy.
 
 ---
 
@@ -197,9 +228,14 @@ driver-documents/
 ├── .gitignore
 ├── index.html
 ├── package.json
+├── api/                    # Serverless functions Vercel (/sync, /sync/push, /health)
+│   ├── sync.js
+│   ├── sync/push.js
+│   └── health.js
 ├── server/
-│   ├── index.js            # Server de sincronizare (Express + PostgreSQL)
-│   └── db.js               # Utilitar de conectare PostgreSQL
+│   ├── index.js            # Server de sincronizare local (Express + PostgreSQL)
+│   ├── db.js               # Utilitar de conectare PostgreSQL
+│   └── sync.js             # Logică partajată sync
 ├── supabase/
 │   └── migrations/         # SQL (tabele documents + tombstones)
 ├── tailwind.config.js

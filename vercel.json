@@ -27,6 +27,18 @@
       }
     },
     {
+      "src": "/sync/push",
+      "dest": "/api/sync/push"
+    },
+    {
+      "src": "/sync",
+      "dest": "/api/sync"
+    },
+    {
+      "src": "/health",
+      "dest": "/api/health"
+    },
+    {
       "handle": "filesystem"
     },
     {
