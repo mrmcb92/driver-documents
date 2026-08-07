@@ -13,37 +13,7 @@ import {
   getDocumentsExpiringThisMonthCount,
   sortDocumentsByUrgency,
 } from './utils/documentUtils';
-
-const STORAGE_KEY = 'driver-documents';
-
-function isDocument(value: unknown): value is Document {
-  if (!value || typeof value !== 'object') return false;
-  const doc = value as Record<string, unknown>;
-  return (
-    typeof doc.id === 'string' &&
-    typeof doc.type === 'string' &&
-    typeof doc.title === 'string' &&
-    typeof doc.issueDate === 'string' &&
-    typeof doc.expiryDate === 'string' &&
-    typeof doc.createdAt === 'number' &&
-    typeof doc.updatedAt === 'number'
-  );
-}
-
-function loadDocuments(): Document[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter(isDocument) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveDocuments(documents: Document[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(documents));
-}
+import { useSyncEngine } from './sync/useSyncEngine';
 
 function SunIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -62,25 +32,38 @@ function MoonIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+const SYNC_STATE_LABELS: Record<string, string> = {
+  idle: 'Sincronizat',
+  syncing: 'Se sincronizează…',
+  offline: 'Offline',
+  error: 'Eroare sincronizare',
+};
+
 export default function App() {
-  const [documents, setDocuments] = useState<Document[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
   const [permission, setPermission] = useState<NotificationPermission | null>(null);
-  const [isClient, setIsClient] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
+  const {
+    documents,
+    state: syncState,
+    hasServer,
+    isReady,
+    addDocument,
+    updateDocument,
+    deleteDocument,
+    syncNow,
+  } = useSyncEngine();
+
   useEffect(() => {
-    setIsClient(true);
-    setDocuments(loadDocuments());
     setPermission(getNotificationPermission());
   }, []);
 
   useEffect(() => {
-    if (!isClient) return;
-    saveDocuments(documents);
+    if (!isReady) return;
     void checkAndSendNotifications(documents);
-  }, [documents, isClient]);
+  }, [documents, isReady]);
 
   const sortedDocuments = useMemo(
     () => sortDocumentsByUrgency(documents),
@@ -102,21 +85,20 @@ export default function App() {
     setIsModalOpen(true);
   }
 
-  function handleSave(document: Document) {
-    setDocuments((prev) => {
-      const exists = prev.find((d) => d.id === document.id);
-      if (exists) {
-        clearNotificationCacheForDocument(document.id);
-        return prev.map((d) => (d.id === document.id ? document : d));
-      }
-      return [...prev, document];
-    });
+  async function handleSave(document: Document) {
+    const exists = documents.some((d) => d.id === document.id);
+    if (exists) {
+      clearNotificationCacheForDocument(document.id);
+      await updateDocument(document);
+    } else {
+      await addDocument(document);
+    }
   }
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     if (window.confirm('Sigur dorești să ștergi acest document?')) {
       clearNotificationCacheForDocument(id);
-      setDocuments((prev) => prev.filter((d) => d.id !== id));
+      await deleteDocument(id);
     }
   }
 
@@ -131,6 +113,8 @@ export default function App() {
       alert(error instanceof Error ? error.message : 'Eroare la activarea notificărilor.');
     }
   }
+
+  const statusLabel = SYNC_STATE_LABELS[syncState] ?? 'Sincronizat';
 
   return (
     <div className="min-h-screen bg-zinc-50 pb-24 transition-colors duration-200 dark:bg-zinc-950">
@@ -171,6 +155,31 @@ export default function App() {
       </header>
 
       <main className="mx-auto max-w-3xl px-4 pt-5">
+        {hasServer && (
+          <div className="mb-5 flex items-center justify-between rounded-2xl border-2 border-black bg-white p-4 text-zinc-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-colors duration-200 dark:border-white dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
+            <div className="flex items-center gap-2">
+              <span
+                className={`inline-block h-3 w-3 rounded-full border-2 border-black dark:border-white ${
+                  syncState === 'syncing'
+                    ? 'bg-yellow-400'
+                    : syncState === 'offline' || syncState === 'error'
+                    ? 'bg-red-500'
+                    : 'bg-green-500'
+                }`}
+              />
+              <p className="text-sm font-black uppercase tracking-wide">{statusLabel}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void syncNow()}
+              disabled={syncState === 'syncing'}
+              className="rounded-lg border-2 border-black bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-zinc-900 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all duration-100 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-white dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
+            >
+              Sincronizează
+            </button>
+          </div>
+        )}
+
         {expiringThisMonth > 0 && (
           <div className="mb-5 rounded-2xl border-2 border-black bg-white p-4 text-zinc-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-colors duration-200 dark:border-white dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
             <div className="flex items-start gap-3">

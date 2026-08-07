@@ -13,6 +13,10 @@ Folosește aplicația direct din browser sau instaleaz-o pe telefon pentru acces
 - Temă întunecată / deschisă
 - Funcționare offline ca aplicație instalabilă (PWA)
 - Interfață optimizată pentru mobil
+- **Sincronizare între dispozitive** (PWA mobilă ⇄ web desktop) prin server REST de sincronizare:
+  - scrieri offline în coadă (outbox) + reîncărcare la reconectare
+  - pull delta cu cursor, rezoluție conflicte last-write-wins + tombstones
+  - indicator de stare sincronizare + buton manual
 
 ---
 
@@ -34,6 +38,53 @@ Folosește aplicația direct din browser sau instaleaz-o pe telefon pentru acces
 | `npm run dev` | Pornește serverul de dezvoltare |
 | `npm run build` | Compilează aplicația pentru producție (`tsc && vite build`) |
 | `npm run preview` | Previzualizează build-ul de producție local |
+| `npm run sync-server` | Pornește serverul local de sincronizare (port 3001) |
+
+---
+
+## Sincronizare între dispozitive
+
+Aplicația folosește un **motor de sincronizare client** (`src/sync/`) care persistă datele în
+**IndexedDB** (în loc de localStorage), cu o **coadă de scrieri offline (outbox)** și **pull delta**
+de la server. Fără server configurat, aplicația funcționează exact ca înainte (offline,
+doar local).
+
+### Pornire locală (client + server)
+
+1. Instalează dependențele:
+   ```bash
+   npm install
+   ```
+2. Creează fișierul `.env` pe baza exemplului:
+   ```bash
+   cp .env.example .env
+   ```
+   `VITE_SYNC_API_URL` trebuie să pointeze către serverul de sincronizare.
+3. Pornește serverul de sincronizare:
+   ```bash
+   npm run sync-server
+   ```
+4. Într-un alt terminal, pornește aplicația:
+   ```bash
+   npm run dev
+   ```
+
+Deschide aplicația pe **două dispozitive** (ex. browser desktop + telefon pe aceeași rețea,
+folosind IP-ul local al calculatorului) și modifică documente — datele se sincronizează automat:
+salvare → debounce 3 s → push; reconectare/intrare în pagină → pull delta.
+
+### Rezoluția conflictelor
+
+- **Last-write-wins** pe document, comparând `updatedAt` (clientul pastrează scrierea mai nouă).
+- **Egalitate de timp (tie):** serverul câștigă și returnează starea rezolvată conflictului; clientul o adoptă.
+- **Ștergere vs editare:** tombstones — ștergerea mai nouă câștigă; „ghost edit” pe un document șters nu-l readuce.
+
+### Deploy producție
+
+Serverul de sincronizare împarte datele printr-un fișier JSON local — suficient pentru test.
+Pentru producție, înlocuiește `server/index.js` cu un backend persistat (Postgres/Supabase etc.)
+care implementează aceleași două rute (`POST /sync/push`, `GET /sync`), de preferință cu
+autentificare per utilizator.
 
 ---
 
