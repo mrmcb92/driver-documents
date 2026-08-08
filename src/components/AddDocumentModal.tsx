@@ -195,7 +195,7 @@ export default function AddDocumentModal({
   const isCustom = form.type === 'custom';
 
   const inputBaseClass =
-    'w-full rounded-xl border-2 bg-white px-3 py-2.5 text-zinc-900 outline-none transition-colors focus:ring-2 focus:ring-zinc-400 sm:px-4 sm:py-3 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:ring-zinc-600';
+    'w-full rounded-xl border-2 bg-white px-4 py-3 text-zinc-900 outline-none transition-colors focus:ring-2 focus:ring-zinc-400 sm:px-5 sm:py-3.5 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:ring-zinc-600';
   const dateInputClass =
     'w-full max-w-full min-w-0 box-border block appearance-none m-0 flex-1';
   const inputErrorClass =
@@ -213,11 +213,11 @@ export default function AddDocumentModal({
       ref={dialogRef}
     >
       <div
-        className="flex w-[90%] max-w-[340px] flex-col overflow-hidden rounded-2xl border-2 border-black bg-white p-4 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] animate-slide-up dark:border-white dark:bg-zinc-900 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] max-h-[85vh] overflow-y-auto"
+        className="flex w-[92%] max-w-[480px] flex-col overflow-hidden rounded-2xl border-2 border-black bg-white p-5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] animate-slide-up dark:border-white dark:bg-zinc-900 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] max-h-[90vh] overflow-y-auto sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-3 flex shrink-0 items-center justify-between sm:mb-4">
-          <h2 id="modal-title" className="text-lg font-black text-zinc-900 dark:text-zinc-100 sm:text-xl">
+        <div className="mb-4 flex shrink-0 items-center justify-between sm:mb-5">
+          <h2 id="modal-title" className="text-xl font-black text-zinc-900 dark:text-zinc-100 sm:text-2xl">
             {editingDocument ? 'Editează document' : 'Adaugă document'}
           </h2>
           <button
@@ -232,9 +232,9 @@ export default function AddDocumentModal({
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col">
-          <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-4 sm:space-y-5">
             <div>
-              <label htmlFor="type" className="mb-1 block text-xs font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
+              <label htmlFor="type" className="mb-1.5 block text-[13px] font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
                 Tip document
               </label>
               <select
@@ -254,7 +254,7 @@ export default function AddDocumentModal({
 
             {isCustom && (
               <div>
-                <label htmlFor="title" className="mb-1 block text-xs font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
+                <label htmlFor="title" className="mb-1.5 block text-[13px] font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
                   Nume document
                 </label>
                 <input
@@ -272,9 +272,9 @@ export default function AddDocumentModal({
               </div>
             )}
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
               <div className="w-full max-w-full overflow-hidden flex flex-col">
-                <label htmlFor="issueDate" className="mb-1 block text-xs font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
+                <label htmlFor="issueDate" className="mb-1.5 block text-[13px] font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
                   Data emiterii/efectuării
                 </label>
                 <input
@@ -291,7 +291,7 @@ export default function AddDocumentModal({
               </div>
 
               <div className="w-full max-w-full overflow-hidden flex flex-col">
-                <label htmlFor="expiryDate" className="mb-1 block text-xs font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
+                <label htmlFor="expiryDate" className="mb-1.5 block text-[13px] font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
                   Data expirării
                 </label>
                 <input
@@ -315,31 +315,31 @@ export default function AddDocumentModal({
             )}
 
             <div>
-              <label htmlFor="notes" className="mb-1 block text-xs font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
+              <label htmlFor="notes" className="mb-1.5 block text-[13px] font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
                 Note (opțional)
               </label>
               <textarea
                 id="notes"
                 value={form.notes}
                 onChange={(e) => handleChange('notes', e.target.value)}
-                rows={3}
+                rows={4}
                 placeholder="Observații, contacte, costuri..."
                 className={`${inputBaseClass} ${inputNormalClass}`}
               />
             </div>
           </div>
 
-          <div className="flex shrink-0 gap-3 pt-3 sm:pt-4">
+          <div className="flex shrink-0 gap-4 pt-4 sm:pt-5">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-xl border-2 border-black bg-white px-3 py-2.5 font-black uppercase tracking-wide text-zinc-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none dark:border-white dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] sm:px-4 sm:py-3"
+              className="flex-1 rounded-xl border-2 border-black bg-white px-5 py-3.5 text-sm font-black uppercase tracking-wide text-zinc-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none dark:border-white dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] sm:text-base"
             >
               Anulează
             </button>
             <button
               type="submit"
-              className="flex-1 rounded-xl border-2 border-black bg-black px-3 py-2.5 font-black uppercase tracking-wide text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transition-all duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] sm:px-4 sm:py-3"
+              className="flex-1 rounded-xl border-2 border-black bg-black px-5 py-3.5 text-sm font-black uppercase tracking-wide text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transition-all duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] sm:text-base"
             >
               {editingDocument ? 'Salvează' : 'Adaugă'}
             </button>
