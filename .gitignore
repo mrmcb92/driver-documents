@@ -24,14 +24,6 @@ dist-ssr
 .env.local
 .env.*.local
 
-# Sync server data
-server/data.json
-
-# Supabase CLI temp files
-supabase/.temp
-supabase/.branches
-.env.production
-
 # OS
 .DS_Store
 Thumbs.db

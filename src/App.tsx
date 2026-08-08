@@ -13,7 +13,7 @@ import {
   getDocumentsExpiringThisMonthCount,
   sortDocumentsByUrgency,
 } from './utils/documentUtils';
-import { useSyncEngine } from './sync/useSyncEngine';
+import { useLocalDocuments } from './hooks/useLocalDocuments';
 
 function SunIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -32,13 +32,6 @@ function MoonIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-const SYNC_STATE_LABELS: Record<string, string> = {
-  idle: 'Sincronizat',
-  syncing: 'Se sincronizează…',
-  offline: 'Offline',
-  error: 'Eroare sincronizare',
-};
-
 export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
@@ -47,14 +40,11 @@ export default function App() {
 
   const {
     documents,
-    state: syncState,
-    hasServer,
     isReady,
     addDocument,
     updateDocument,
     deleteDocument,
-    syncNow,
-  } = useSyncEngine();
+  } = useLocalDocuments();
 
   useEffect(() => {
     setPermission(getNotificationPermission());
@@ -114,8 +104,6 @@ export default function App() {
     }
   }
 
-  const statusLabel = SYNC_STATE_LABELS[syncState] ?? 'Sincronizat';
-
   return (
     <div className="min-h-screen bg-zinc-50 pb-24 transition-colors duration-200 dark:bg-zinc-950">
       <header className="sticky top-0 z-30 border-b-2 border-black bg-zinc-50/95 px-4 py-4 backdrop-blur transition-colors duration-200 dark:border-white dark:bg-zinc-950/95">
@@ -155,31 +143,6 @@ export default function App() {
       </header>
 
       <main className="mx-auto max-w-3xl px-4 pt-5">
-        {hasServer && (
-          <div className="mb-5 flex items-center justify-between rounded-2xl border-2 border-black bg-white p-4 text-zinc-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-colors duration-200 dark:border-white dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
-            <div className="flex items-center gap-2">
-              <span
-                className={`inline-block h-3 w-3 rounded-full border-2 border-black dark:border-white ${
-                  syncState === 'syncing'
-                    ? 'bg-yellow-400'
-                    : syncState === 'offline' || syncState === 'error'
-                    ? 'bg-red-500'
-                    : 'bg-green-500'
-                }`}
-              />
-              <p className="text-sm font-black uppercase tracking-wide">{statusLabel}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => void syncNow()}
-              disabled={syncState === 'syncing'}
-              className="rounded-lg border-2 border-black bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-zinc-900 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all duration-100 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-white dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
-            >
-              Sincronizează
-            </button>
-          </div>
-        )}
-
         {expiringThisMonth > 0 && (
           <div className="mb-5 rounded-2xl border-2 border-black bg-white p-4 text-zinc-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-colors duration-200 dark:border-white dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
             <div className="flex items-start gap-3">
