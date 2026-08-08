@@ -18,6 +18,7 @@ export async function connectDb() {
 
     await client.connect();
     console.log('[db] Conectat la baza de date PostgreSQL.');
+    await initDb();
   }
   return client;
 }
