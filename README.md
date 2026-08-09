@@ -13,7 +13,9 @@ Folosește aplicația direct din browser sau instaleaz-o pe telefon pentru acces
 - Temă întunecată / deschisă
 - Funcționare offline ca aplicație instalabilă (PWA)
 - Interfață optimizată pentru mobil
-- Date stocate local în browser (localStorage)
+- Conturi de utilizator cu autentificare securizată (Supabase Auth)
+- Date sincronizate în cloud (PostgreSQL + Row Level Security), fiecare utilizator vede doar documentele proprii
+- Atașare scan / poză pentru fiecare document (Supabase Storage, bucket privat)
 
 ---
 
@@ -24,6 +26,7 @@ Folosește aplicația direct din browser sau instaleaz-o pe telefon pentru acces
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [vite-plugin-pwa](https://vite-pwa-org.netlify.app/)
+- [Supabase](https://supabase.com/) — autentificare, PostgreSQL cu Row Level Security, storage pentru scanuri
 
 ---
 
@@ -65,16 +68,66 @@ După `git push`, codul sursă va fi disponibil pe GitHub.
 
 ---
 
+## Configurare backend Supabase
+
+Aplicația folosește Supabase pentru autentificare, baza de date și stocarea scanurilor. Pașii de configurare:
+
+### 1. Creează un proiect
+
+1. Intră pe [supabase.com](https://supabase.com) → **New project**.
+2. Alege organizația, numele (ex. `driver-documents`) și o regiune apropiată (ex. `Central EU (Frankfurt)`).
+3. Salvează parola bazei de date într-un loc sigur — o vei folosi la pasul următor.
+
+### 2. Aplică schema bazei de date
+
+Rulezi migration-urile din `supabase/migrations` pe proiect. Există două opțiuni:
+
+**Opțiunea A — SQL Editor (recomandată pentru început):**
+
+1. Din dashboard → **SQL Editor**, deschide fișierul `supabase/migrations/20260808210000_init.sql` și execută tot conținutul.
+2. Deschide apoi `supabase/migrations/20260808220000_document_user_id_trigger.sql` și execută-l.
+3. Opțional, în **Storage → Buckets** (sau din același editor SQL) verifică bucketul `document-scans` creat cu acces privat.
+
+**Opțiunea B — CLI:**
+
+```bash
+supabase link --project-ref REFERINȚA_PROIECTULUI
+supabase db push
+```
+
+### 3. Configurează autentificarea
+
+În **Authentication → Providers → Email**, asigură-te că providerul **Email** este activat. Pentru testare poți dezactiva „Confirm email" dacă vrei conturi create instant (nu recomandat în producție).
+
+### 4. Setează variabilele de mediu
+
+Creează un fișier `.env` (nu se expediază pe GitHub) cu:
+
+```
+VITE_SUPABASE_URL=https://REFERINȚA_PROIECTULUI.supabase.co
+VITE_SUPABASE_ANON_KEY=cheia_anon
+```
+
+- `VITE_SUPABASE_URL` și `VITE_SUPABASE_ANON_KEY` se găsesc în dashboard → **Project Settings → API**.
+- **Important:** folosește cheia **anon/public**, nu `service_role` (care are acces total și nu trebuie expusă în client).
+
+### 5. La deploy (Vercel / Netlify)
+
+Adaugă aceleași două variabile (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) în **Environment Variables** ale proiectului de hosting, apoi redeploy.
+
+---
+
 ## Cum să faci deploy gratuit pe Vercel
 
 1. Intră pe [vercel.com](https://vercel.com) și autentifică-te cu contul GitHub.
 2. Apasă **Add New… → Project**.
 3. Selectează depozitul `driver-documents` și apasă **Import**.
-4. Lasă setările implicite:
+4. Adaugă variabilele de mediu `VITE_SUPABASE_URL` și `VITE_SUPABASE_ANON_KEY`.
+5. Lasă setările implicite:
    - **Framework Preset:** Vite
    - **Build Command:** `npm run build`
    - **Output Directory:** `dist`
-5. Apasă **Deploy**.
+6. Apasă **Deploy**.
 
 În câteva secunde vei primi un link public de forma:
 

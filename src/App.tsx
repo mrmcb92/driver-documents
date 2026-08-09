@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Document } from './types/document';
 import AddDocumentModal from './components/AddDocumentModal';
 import DocumentCard from './components/DocumentCard';
+import LoginScreen from './components/LoginScreen';
 import { useTheme } from './contexts/ThemeContext';
+import { useAuth } from './contexts/AuthContext';
 import {
   checkAndSendNotifications,
   clearNotificationCacheForDocument,
@@ -13,7 +15,7 @@ import {
   getDocumentsExpiringThisMonthCount,
   sortDocumentsByUrgency,
 } from './utils/documentUtils';
-import { useLocalDocuments } from './hooks/useLocalDocuments';
+import { useSupabaseDocuments } from './hooks/useSupabaseDocuments';
 
 function SunIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -38,13 +40,16 @@ export default function App() {
   const [permission, setPermission] = useState<NotificationPermission | null>(null);
   const { theme, toggleTheme } = useTheme();
 
+  const { user, isLoading: authLoading, signOut } = useAuth();
+
   const {
     documents,
     isReady,
+    error: documentsError,
     addDocument,
     updateDocument,
     deleteDocument,
-  } = useLocalDocuments();
+  } = useSupabaseDocuments();
 
   useEffect(() => {
     setPermission(getNotificationPermission());
@@ -104,6 +109,20 @@ export default function App() {
     }
   }
 
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-50 transition-colors duration-200 dark:bg-zinc-950">
+        <p className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-zinc-100">
+          Se încarcă...
+        </p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
+
   return (
     <div className="min-h-screen bg-zinc-50 pb-24 transition-colors duration-200 dark:bg-zinc-950">
       <header className="sticky top-0 z-30 border-b-2 border-black bg-zinc-50/95 px-4 py-4 backdrop-blur transition-colors duration-200 dark:border-white dark:bg-zinc-950/95">
@@ -118,6 +137,9 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2">
+            <span className="hidden max-w-[140px] truncate text-xs font-bold text-zinc-600 dark:text-zinc-400 sm:block">
+              {user?.email}
+            </span>
             <button
               type="button"
               onClick={toggleTheme}
@@ -138,11 +160,29 @@ export default function App() {
             >
               {permission === 'granted' ? 'Alerte active' : 'Activează alerte'}
             </button>
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="rounded-full border-2 border-black bg-white px-4 py-2 text-xs font-bold uppercase tracking-wide text-zinc-900 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all duration-100 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none dark:border-white dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
+            >
+              Ieși
+            </button>
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-3xl px-4 pt-5">
+        {documentsError && (
+          <div className="mb-5 rounded-2xl border-2 border-black bg-red-100 p-4 text-zinc-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-red-950 dark:text-zinc-100">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">⚠️</span>
+              <div>
+                <p className="font-black uppercase tracking-tight">Eroare la sincronizare</p>
+                <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{documentsError}</p>
+              </div>
+            </div>
+          </div>
+        )}
         {expiringThisMonth > 0 && (
           <div className="mb-5 rounded-2xl border-2 border-black bg-white p-4 text-zinc-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-colors duration-200 dark:border-white dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
             <div className="flex items-start gap-3">

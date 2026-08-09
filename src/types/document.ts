@@ -17,6 +17,7 @@ export interface Document {
   issueDate: string; // ISO date (YYYY-MM-DD)
   expiryDate: string; // ISO date (YYYY-MM-DD)
   notes?: string;
+  attachmentPath?: string;
   createdAt: number;
   updatedAt: number;
 }

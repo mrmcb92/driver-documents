@@ -7,6 +7,7 @@ import {
   getValidityMonths,
   calculateExpiryDate,
 } from '../utils/documentUtils';
+import { uploadDocumentScan } from '../utils/storageService';
 
 interface AddDocumentModalProps {
   isOpen: boolean;
@@ -32,6 +33,9 @@ export default function AddDocumentModal({
   const [form, setForm] = useState<DocumentFormData>(EMPTY_FORM);
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -94,6 +98,8 @@ export default function AddDocumentModal({
       }
       setErrors({});
       setTouched({});
+      setAttachmentFile(null);
+      setUploadError(null);
     }
   }, [isOpen, editingDocument]);
 
@@ -159,8 +165,9 @@ export default function AddDocumentModal({
     setErrors(validate(form));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setUploadError(null);
     const validationErrors = validate(form);
     setTouched({
       type: true,
@@ -175,16 +182,34 @@ export default function AddDocumentModal({
     }
 
     const now = Date.now();
+    const documentId = editingDocument?.id ?? generateId();
     const documentToSave: Document = {
-      id: editingDocument?.id ?? generateId(),
+      id: documentId,
       type: form.type,
       title: form.type === 'custom' ? form.title.trim() : DOCUMENT_TYPE_LABELS[form.type],
       issueDate: form.issueDate,
       expiryDate: form.expiryDate,
       notes: form.notes.trim() || undefined,
+      attachmentPath: editingDocument?.attachmentPath,
       createdAt: editingDocument?.createdAt ?? now,
       updatedAt: now,
     };
+
+    if (attachmentFile) {
+      setIsUploading(true);
+      try {
+        documentToSave.attachmentPath = await uploadDocumentScan(documentId, attachmentFile);
+      } catch (error) {
+        setUploadError(
+          error instanceof Error
+            ? error.message
+            : 'Fișierul nu a putut fi încărcat. Încearcă din nou.'
+        );
+        setIsUploading(false);
+        return;
+      }
+      setIsUploading(false);
+    }
 
     onSave(documentToSave);
     onClose();
@@ -315,6 +340,35 @@ export default function AddDocumentModal({
             )}
 
             <div>
+              <label htmlFor="attachment" className="mb-1.5 block text-[13px] font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
+                Scan / poză document (opțional)
+              </label>
+              <input
+                id="attachment"
+                type="file"
+                accept="image/*,.pdf"
+                onChange={(e) => {
+                  setUploadError(null);
+                  setAttachmentFile(e.target.files?.[0] ?? null);
+                }}
+                className={`${inputBaseClass} ${inputNormalClass} file:mr-3 file:rounded-lg file:border-2 file:border-black file:bg-black file:px-3 file:py-1.5 file:text-sm file:font-black file:uppercase file:text-white dark:file:border-white dark:file:bg-white dark:file:text-black`}
+              />
+              {attachmentFile && (
+                <p className="mt-1 text-sm font-bold text-zinc-600 dark:text-zinc-400">
+                  {attachmentFile.name} ({(attachmentFile.size / 1024 / 1024).toFixed(1)} MB)
+                </p>
+              )}
+              {!attachmentFile && editingDocument?.attachmentPath && (
+                <p className="mt-1 text-sm font-bold text-zinc-600 dark:text-zinc-400">
+                  Ai deja un scan atașat. Selectează un fișier pentru a-l înlocui.
+                </p>
+              )}
+              {uploadError && (
+                <p className="mt-1 text-sm font-bold text-zinc-900 dark:text-zinc-100">{uploadError}</p>
+              )}
+            </div>
+
+            <div>
               <label htmlFor="notes" className="mb-1.5 block text-[13px] font-black uppercase tracking-wide text-zinc-900 dark:text-zinc-100 sm:text-sm">
                 Note (opțional)
               </label>
@@ -339,9 +393,10 @@ export default function AddDocumentModal({
             </button>
             <button
               type="submit"
-              className="flex-1 rounded-xl border-2 border-black bg-black px-5 py-3.5 text-sm font-black uppercase tracking-wide text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transition-all duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] sm:text-base"
+              disabled={isUploading}
+              className="flex-1 rounded-xl border-2 border-black bg-black px-5 py-3.5 text-sm font-black uppercase tracking-wide text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transition-all duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:cursor-not-allowed disabled:opacity-60 dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] sm:text-base"
             >
-              {editingDocument ? 'Salvează' : 'Adaugă'}
+              {isUploading ? 'Se încarcă...' : editingDocument ? 'Salvează' : 'Adaugă'}
             </button>
           </div>
         </form>
