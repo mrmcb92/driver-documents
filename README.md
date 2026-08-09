@@ -99,6 +99,28 @@ supabase db push
 
 În **Authentication → Providers → Email**, asigură-te că providerul **Email** este activat. Pentru testare poți dezactiva „Confirm email" dacă vrei conturi create instant (nu recomandat în producție).
 
+#### Autentificare cu Google (opțional)
+
+1. **Google Cloud Console** — intră pe [console.cloud.google.com](https://console.cloud.google.com):
+   - Creează un proiect (sau selectează unul existent).
+   - Activează **Google Auth Platform** → **OAuth consent screen** (tip **External**).
+   - Mergi la **Clients** → **Create Client** → tip **Web application**.
+   - La **Authorized redirect URIs** adaugă:
+     ```
+     https://REFERINȚA_PROIECTULUI.supabase.co/auth/v1/callback
+     ```
+     (unde `REFERINȚA_PROIECTULUI` este referința proiectului Supabase — o găsești în dashboard-ul Supabase sau în URL: `https://supabase.com/dashboard/project/REFERINȚA_PROIECTULUI`)
+   - Copiază **Client ID** și **Client Secret**.
+
+2. **Supabase Dashboard** → **Authentication → Providers → Google**:
+   - Activează providerul **Google**.
+   - Lipește **Client ID** și **Client Secret** de la pasul 1.
+   - Salvează.
+
+3. **Supabase → Authentication → URL Configuration** — asigură-te că adresa site-ului (ex. `https://driver-documents-USERNAME.vercel.app`) este listată la **Redirect URLs**.
+
+> Notă: dacă un utilizator are deja cont cu email + parolă și se autentifică cu același email Google, Supabase le conectează automat — documentele rămân intacte.
+
 ### 4. Setează variabilele de mediu
 
 Creează un fișier `.env` (nu se expediază pe GitHub) cu:

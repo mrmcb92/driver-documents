@@ -56,7 +56,9 @@ export interface UseSupabaseDocumentsResult {
   deleteDocument: (id: string) => Promise<void>;
 }
 
-export function useSupabaseDocuments(): UseSupabaseDocumentsResult {
+export function useSupabaseDocuments(
+  userId: string | null
+): UseSupabaseDocumentsResult {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,8 +83,9 @@ export function useSupabaseDocuments(): UseSupabaseDocumentsResult {
   }, []);
 
   useEffect(() => {
+    setIsReady(false);
     void loadDocuments().finally(() => setIsReady(true));
-  }, [loadDocuments]);
+  }, [loadDocuments, userId]);
 
   const addDocument = useCallback(
     async (doc: Document) => {

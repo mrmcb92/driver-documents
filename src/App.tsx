@@ -49,7 +49,7 @@ export default function App() {
     addDocument,
     updateDocument,
     deleteDocument,
-  } = useSupabaseDocuments();
+  } = useSupabaseDocuments(user?.id ?? null);
 
   useEffect(() => {
     setPermission(getNotificationPermission());
