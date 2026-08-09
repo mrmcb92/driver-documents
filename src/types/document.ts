@@ -37,7 +37,6 @@ export interface DocumentStatusInfo {
   daysRemaining: number;
   label: string;
   colorClass: string;
-  borderClass: string;
   icon: string;
 }
 

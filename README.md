@@ -86,7 +86,8 @@ Rulezi migration-urile din `supabase/migrations` pe proiect. Există două opți
 
 1. Din dashboard → **SQL Editor**, deschide fișierul `supabase/migrations/20260808210000_init.sql` și execută tot conținutul.
 2. Deschide apoi `supabase/migrations/20260808220000_document_user_id_trigger.sql` și execută-l.
-3. Opțional, în **Storage → Buckets** (sau din același editor SQL) verifică bucketul `document-scans` creat cu acces privat.
+3. Deschide `supabase/migrations/20260808230000_realtime.sql` și execută-l — activează sincronizarea în timp real a documentelor între dispozitive.
+4. Opțional, în **Storage → Buckets** (sau din același editor SQL) verifică bucketul `document-scans` creat cu acces privat.
 
 **Opțiunea B — CLI:**
 

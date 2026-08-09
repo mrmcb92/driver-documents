@@ -50,8 +50,22 @@ export function getNotificationPermission(): NotificationPermission | null {
   return Notification.permission;
 }
 
+/**
+ * Today's date as YYYY-MM-DD in LOCAL time.
+ * Never use toISOString(): it returns the UTC day, which is wrong between
+ * midnight and +3h in Europe/Bucharest and would re-send or skip
+ * notifications at the day boundary.
+ */
+function getLocalToday(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function shouldNotifyToday(cache: NotificationCache, documentId: string): boolean {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalToday();
   return cache[documentId] !== today;
 }
 
@@ -92,24 +106,35 @@ export async function sendNativeNotification(document: Document, daysRemaining: 
 }
 
 export async function checkAndSendNotifications(documents: Document[]): Promise<Document[]> {
-  if (!('Notification' in window) || Notification.permission !== 'granted') {
+  if (
+    !('Notification' in window) ||
+    Notification.permission !== 'granted' ||
+    !areNotificationsEnabled()
+  ) {
     return [];
   }
 
   const cache = getNotificationCache();
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalToday();
   const notifiedDocuments: Document[] = [];
 
-  sortDocumentsByUrgency(documents).forEach((doc) => {
+  // Sort by urgency so the most critical documents are sent first. Each send
+  // is awaited: only mark the daily cache entry when the send actually
+  // succeeded, so a transient failure does not suppress the next attempt.
+  const sorted = sortDocumentsByUrgency(documents);
+  for (const doc of sorted) {
     const daysRemaining = calculateDaysUntilExpiry(doc.expiryDate);
 
-    // Notify if expired or expiring within 30 days
     if (daysRemaining <= 30 && shouldNotifyToday(cache, doc.id)) {
-      void sendNativeNotification(doc, daysRemaining);
-      cache[doc.id] = today;
-      notifiedDocuments.push(doc);
+      try {
+        await sendNativeNotification(doc, daysRemaining);
+        cache[doc.id] = today;
+        notifiedDocuments.push(doc);
+      } catch {
+        // Keep going with the remaining documents; failed sends retry tomorrow.
+      }
     }
-  });
+  }
 
   setNotificationCache(cache);
   return notifiedDocuments;

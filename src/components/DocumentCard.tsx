@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import type { Document } from '../types/document';
 import {
   DOCUMENT_TYPE_LABELS,
   formatDateRo,
   getDocumentStatus,
 } from '../utils/documentUtils';
+import { getSignedScanUrl } from '../utils/storageService';
 
 interface DocumentCardProps {
   document: Document;
@@ -14,6 +16,24 @@ interface DocumentCardProps {
 export default function DocumentCard({ document, onEdit, onDelete }: DocumentCardProps) {
   const status = getDocumentStatus(document.expiryDate);
   const isCustom = document.type === 'custom';
+  const [isOpeningScan, setIsOpeningScan] = useState(false);
+
+  // Negative days are used internally for the "expired" bucket; the UI must
+  // never show "-5 zile".
+  const displayDaysRemaining = Math.abs(status.daysRemaining);
+
+  async function handleOpenScan() {
+    if (isOpeningScan) return;
+    setIsOpeningScan(true);
+    try {
+      const url = await getSignedScanUrl(document.id);
+      if (url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    } finally {
+      setIsOpeningScan(false);
+    }
+  }
 
   return (
     <div
@@ -38,9 +58,9 @@ export default function DocumentCard({ document, onEdit, onDelete }: DocumentCar
         <div
           className={`flex shrink-0 flex-col items-center rounded-xl border-2 px-3 py-2 ${status.colorClass}`}
         >
-          <span className="text-xl font-black">{status.daysRemaining}</span>
+          <span className="text-xl font-black">{displayDaysRemaining}</span>
           <span className="text-xs font-black uppercase tracking-wide">
-            {status.daysRemaining === 1 ? 'zi' : 'zile'}
+            {displayDaysRemaining === 1 ? 'zi' : 'zile'}
           </span>
         </div>
       </div>
@@ -53,7 +73,18 @@ export default function DocumentCard({ document, onEdit, onDelete }: DocumentCar
           {status.label}
         </span>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {document.attachmentPath && (
+            <button
+              type="button"
+              onClick={() => void handleOpenScan()}
+              disabled={isOpeningScan}
+              className="rounded-lg border-2 border-black bg-white px-3 py-2 text-sm font-bold text-zinc-900 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all duration-100 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:cursor-wait disabled:opacity-60 dark:border-white dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
+              aria-label="Vezi scanul documentului"
+            >
+              {isOpeningScan ? 'Se deschide...' : 'Vezi scanul'}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => onEdit(document)}

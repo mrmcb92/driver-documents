@@ -12,7 +12,7 @@ import { uploadDocumentScan } from '../utils/storageService';
 interface AddDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (document: Document) => void;
+  onSave: (document: Document) => Promise<void>;
   editingDocument: Document | null;
 }
 
@@ -208,10 +208,22 @@ export default function AddDocumentModal({
         setIsUploading(false);
         return;
       }
-      setIsUploading(false);
     }
 
-    onSave(documentToSave);
+    // Keep the modal open on failure so nothing the user typed is lost.
+    try {
+      await onSave(documentToSave);
+    } catch (error) {
+      setUploadError(
+        error instanceof Error
+          ? error.message
+          : 'Documentul nu a putut fi salvat. Încearcă din nou.'
+      );
+      setIsUploading(false);
+      return;
+    }
+
+    setIsUploading(false);
     onClose();
   }
 

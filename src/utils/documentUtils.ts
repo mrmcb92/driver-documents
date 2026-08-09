@@ -65,7 +65,6 @@ export function getDocumentStatus(expiryDate: string): DocumentStatusInfo {
       // Inversat puternic: fundal negru, text alb, contur alb
       colorClass:
         'border-white bg-black text-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.5)] dark:border-black dark:bg-white dark:text-black dark:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)]',
-      borderClass: 'border-black dark:border-white',
       icon: '✕',
     };
   }
@@ -78,7 +77,6 @@ export function getDocumentStatus(expiryDate: string): DocumentStatusInfo {
       // Negru intens pe fundal gri deschis / invers în dark
       colorClass:
         'border-black bg-zinc-200 text-zinc-950 dark:border-white dark:bg-zinc-800 dark:text-zinc-100',
-      borderClass: 'border-zinc-900 dark:border-zinc-100',
       icon: '!',
     };
   }
@@ -91,7 +89,6 @@ export function getDocumentStatus(expiryDate: string): DocumentStatusInfo {
       // Contur și text negri pe fundal alb, cu umbră subtilă
       colorClass:
         'border-black bg-white text-zinc-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]',
-      borderClass: 'border-zinc-600 dark:border-zinc-400',
       icon: '⏳',
     };
   }
@@ -103,7 +100,6 @@ export function getDocumentStatus(expiryDate: string): DocumentStatusInfo {
     // Stil discret, monocrom
     colorClass:
       'border-zinc-300 bg-zinc-50 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100',
-    borderClass: 'border-zinc-400 dark:border-zinc-600',
     icon: '✓',
   };
 }

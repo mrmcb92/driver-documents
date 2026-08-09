@@ -6,10 +6,11 @@ import LoginScreen from './components/LoginScreen';
 import { useTheme } from './contexts/ThemeContext';
 import { useAuth } from './contexts/AuthContext';
 import {
+  areNotificationsEnabled,
   checkAndSendNotifications,
   clearNotificationCacheForDocument,
-  getNotificationPermission,
   requestNotificationPermission,
+  setNotificationsEnabled,
 } from './utils/notificationService';
 import {
   getDocumentsExpiringThisMonthCount,
@@ -37,7 +38,7 @@ function MoonIcon(props: React.SVGProps<SVGSVGElement>) {
 export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
-  const [permission, setPermission] = useState<NotificationPermission | null>(null);
+  const [notificationsEnabled, setNotificationsEnabledState] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   const { user, isLoading: authLoading, signOut } = useAuth();
@@ -52,7 +53,7 @@ export default function App() {
   } = useSupabaseDocuments(user?.id ?? null);
 
   useEffect(() => {
-    setPermission(getNotificationPermission());
+    setNotificationsEnabledState(areNotificationsEnabled());
   }, []);
 
   useEffect(() => {
@@ -91,17 +92,31 @@ export default function App() {
   }
 
   async function handleDelete(id: string) {
-    if (window.confirm('Sigur dorești să ștergi acest document?')) {
-      clearNotificationCacheForDocument(id);
+    if (!window.confirm('Sigur dorești să ștergi acest document?')) return;
+
+    clearNotificationCacheForDocument(id);
+    try {
       await deleteDocument(id);
+    } catch {
+      // The friendly message is already shown in the sync error banner.
     }
   }
 
-  async function handleEnableNotifications() {
+  async function handleToggleNotifications() {
+    // Already active → disable without touching the browser permission.
+    if (notificationsEnabled) {
+      setNotificationsEnabled(false);
+      setNotificationsEnabledState(false);
+      return;
+    }
+
     try {
-      const result = await requestNotificationPermission();
-      setPermission(result);
-      if (result === 'granted') {
+      await requestNotificationPermission();
+      // The flag is only flipped inside requestNotificationPermission when the
+      // browser granted the permission. If it was already granted earlier,
+      // requestPermission resolves instantly with "granted".
+      setNotificationsEnabledState(areNotificationsEnabled());
+      if (areNotificationsEnabled()) {
         await checkAndSendNotifications(documents);
       }
     } catch (error) {
@@ -151,14 +166,14 @@ export default function App() {
 
             <button
               type="button"
-              onClick={handleEnableNotifications}
+              onClick={() => void handleToggleNotifications()}
               className={`rounded-full border-2 px-4 py-2 text-xs font-bold uppercase tracking-wide shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all duration-100 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] ${
-                permission === 'granted'
+                notificationsEnabled
                   ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black'
                   : 'border-black bg-white text-zinc-900 dark:border-white dark:bg-zinc-900 dark:text-zinc-100'
               }`}
             >
-              {permission === 'granted' ? 'Alerte active' : 'Activează alerte'}
+              {notificationsEnabled ? 'Alerte active' : 'Activează alerte'}
             </button>
             <button
               type="button"
