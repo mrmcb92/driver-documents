@@ -23,14 +23,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
+    const client = supabase;
+    if (!client) {
+      setIsLoading(false);
+      return;
+    }
+
+    const { data: authListener } = client.auth.onAuthStateChange(
       (_event, session: Session | null) => {
         setUser(session?.user ?? null);
         setIsLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(({ data }) => {
+    client.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
       setIsLoading(false);
     });
@@ -41,17 +47,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const client = supabase;
+    if (!client) return { error: 'Aplicația nu este configurată corect.' };
+    const { error } = await client.auth.signInWithPassword({ email, password });
     return { error: error?.message ?? null };
   }
 
   async function signUp(email: string, password: string) {
-    const { error } = await supabase.auth.signUp({ email, password });
+    const client = supabase;
+    if (!client) return { error: 'Aplicația nu este configurată corect.' };
+    const { error } = await client.auth.signUp({ email, password });
     return { error: error?.message ?? null };
   }
 
   async function signOut() {
-    await supabase.auth.signOut();
+    const client = supabase;
+    if (!client) return;
+    await client.auth.signOut();
   }
 
   return (

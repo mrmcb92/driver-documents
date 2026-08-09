@@ -19,8 +19,13 @@ export async function uploadDocumentScan(
     throw new Error(`Fișierul depășește limita de ${MAX_SCAN_SIZE_MB} MB.`);
   }
 
+  const client = supabase;
+  if (!client) {
+    throw new Error('Aplicația nu este configurată corect. Adaugă variabilele de mediu Supabase și redeployează.');
+  }
+
   const path = objectPath(docId);
-  const { error } = await supabase.storage
+  const { error } = await client.storage
     .from(BUCKET)
     .upload(path, file, { upsert: true, contentType: file.type || 'application/octet-stream' });
 
@@ -32,14 +37,22 @@ export async function uploadDocumentScan(
 }
 
 export async function removeDocumentScan(docId: string): Promise<void> {
-  const { error } = await supabase.storage.from(BUCKET).remove([objectPath(docId)]);
+  const client = supabase;
+  if (!client) {
+    throw new Error('Aplicația nu este configurată corect. Adaugă variabilele de mediu Supabase și redeployează.');
+  }
+
+  const { error } = await client.storage.from(BUCKET).remove([objectPath(docId)]);
   if (error) {
     throw new Error(`Eroare la ștergerea scanului: ${error.message}`);
   }
 }
 
 export async function getSignedScanUrl(docId: string): Promise<string | null> {
-  const { data, error } = await supabase.storage
+  const client = supabase;
+  if (!client) return null;
+
+  const { data, error } = await client.storage
     .from(BUCKET)
     .createSignedUrl(objectPath(docId), 300);
 

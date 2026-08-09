@@ -62,7 +62,10 @@ export function useSupabaseDocuments(): UseSupabaseDocumentsResult {
   const [error, setError] = useState<string | null>(null);
 
   const loadDocuments = useCallback(async () => {
-    const { data, error } = await supabase
+    const client = supabase;
+    if (!client) return;
+
+    const { data, error } = await client
       .from('documents')
       .select('*')
       .order('expiry_date', { ascending: true });
@@ -83,7 +86,10 @@ export function useSupabaseDocuments(): UseSupabaseDocumentsResult {
 
   const addDocument = useCallback(
     async (doc: Document) => {
-      const { error } = await supabase.from('documents').insert({
+      const client = supabase;
+      if (!client) return;
+
+      const { error } = await client.from('documents').insert({
         id: doc.id,
         type: doc.type,
         title: doc.title,
@@ -105,7 +111,10 @@ export function useSupabaseDocuments(): UseSupabaseDocumentsResult {
 
   const updateDocument = useCallback(
     async (doc: Document) => {
-      const { error } = await supabase
+      const client = supabase;
+      if (!client) return;
+
+      const { error } = await client
         .from('documents')
         .update({
           type: doc.type,
@@ -128,7 +137,10 @@ export function useSupabaseDocuments(): UseSupabaseDocumentsResult {
 
   const deleteDocument = useCallback(
     async (id: string) => {
-      const { error } = await supabase.from('documents').delete().eq('id', id);
+      const client = supabase;
+      if (!client) return;
+
+      const { error } = await client.from('documents').delete().eq('id', id);
       if (error) {
         setError(toFriendlyMessage(error.message));
         return;
