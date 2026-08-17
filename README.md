@@ -224,6 +224,29 @@ driver-documents/
 
 ---
 
+## Menținerea proiectului Supabase activ (plan Free)
+
+Supabase pauzează automat proiectele de pe planul Free după 7 zile de inactivitate. În acest repo există un workflow GitHub Actions (`.github/workflows/keep-alive.yml`) care face un request zilnic către baza de date, astfel încât proiectul să nu mai fie pauzat niciodată.
+
+### Configurare o singură dată (secrets)
+
+Workflow-ul are nevoie de două variabile secrete în repo:
+
+1. **Supabase Dashboard** → **Project Settings → API**:
+   - copiază **Project URL** (ex. `https://xxxx.supabase.co`)
+   - copiază cheia **anon public** (nu `service_role`!)
+
+2. **GitHub** → repo-ul `driver-documents` → **Settings → Secrets and variables → Actions** → **New repository secret**:
+   - adaugă secretul `SUPABASE_URL` cu valoarea Project URL
+   - adaugă secretul `SUPABASE_ANON_KEY` cu valoarea cheii anon
+
+### Cum funcționează
+
+- Rulează zilnic la 06:00 UTC (`cron: '0 6 * * *'`)
+- Face un `GET` către `{SUPABASE_URL}/rest/v1/documents?select=id&limit=1` folosind cheia anon (aceeași cheie pe care o folosește aplicația — fără privilegii în plus)
+- Poți rula și manual: **GitHub → Actions → Supabase Keep-Alive → Run workflow**
+- Dacă request-ul eșuează, workflow-ul apare ca failed și primești notificare pe email — verifici apoi în loguri ce s-a întâmplat
+
 ## Licență
 
 Proiect privat / uz personal. Modifică și distribuie conform nevoilor tale.
